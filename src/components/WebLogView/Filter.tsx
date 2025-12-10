@@ -1,6 +1,6 @@
 import { IconButton, TextField, Tooltip } from '@radix-ui/themes'
 import { RootProps } from '@radix-ui/themes/dist/cjs/components/text-field'
-import { CodeXmlIcon } from 'lucide-react'
+import { CodeXmlIcon, Inspect } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useKeyPressEvent } from 'react-use'
 import useKeyboardJs from 'react-use/lib/useKeyboardJs'
@@ -48,15 +48,22 @@ export function Filter({
       onChange={setFilter}
     >
       <TextField.Slot px="1">
-        <Tooltip content="Search all request data, including headers, cookies, payload, and response data">
+        <Tooltip
+          content={
+            filterAllData
+              ? 'Search all request data (headers, cookies, payload, response)'
+              : 'Search URL, method, status code, hosts and paths'
+          }
+        >
           <IconButton
             variant={filterAllData ? 'solid' : 'ghost'}
             size="1"
             onClick={() => setFilterAllData(!filterAllData)}
             // Override ghost button margin
             css={{ margin: '0' }}
+            aria-label="Toggle search mode"
           >
-            <CodeXmlIcon />
+            {filterAllData ? <Inspect /> : <CodeXmlIcon />}
           </IconButton>
         </Tooltip>
       </TextField.Slot>
