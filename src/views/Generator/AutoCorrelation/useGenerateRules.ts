@@ -34,7 +34,6 @@ export const useGenerateRules = ({
   clearValidation: () => void
 }) => {
   const [suggestedRules, setSuggestedRules] = useState<CorrelationRule[]>([])
-  const [isValidationSuccessful, setIsValidationSuccessful] = useState(false)
   const [correlationStatus, setCorrelationStatus] =
     useState<CorrelationStatus>('not-started')
   const [outcomeReason, setOutcomeReason] = useState('')
@@ -52,13 +51,14 @@ export const useGenerateRules = ({
     addToolOutput,
     status,
     stop: stopGeneration,
+    clearError,
+    setMessages,
   } = useChat<Message>({
     transport: new IPCChatTransport({ onUsage: setTokenUsage }),
     // Keep calling tools without user input
     sendAutomaticallyWhen: lastMessageIsToolCall,
     onError: (error) => {
       setCorrelationStatus('error')
-      setOutcomeReason('An error occurred during auto-correlation.')
       console.error(error)
     },
     onToolCall: async ({ toolCall }) => {
@@ -165,15 +165,14 @@ export const useGenerateRules = ({
 
     const validationResult = await validateScript(
       script,
-      abortControllerRef.current?.signal
+      abortControllerRef.current?.signal,
+      false
     )
 
     const result = validationMatchesRecording(
       prepareRequestsForAI(recording),
       prepareRequestsForAI(validationResult)
     )
-
-    setIsValidationSuccessful(result.success)
 
     return result
   }
@@ -189,8 +188,8 @@ export const useGenerateRules = ({
     window.studio.app.trackEvent({
       event: UsageEventName.AutocorrelationStarted,
     })
-    setIsValidationSuccessful(false)
     setCorrelationStatus('validating')
+    clearError()
 
     try {
       const validationResult = await runValidation()
@@ -213,13 +212,20 @@ export const useGenerateRules = ({
       }
       console.error(error)
       setCorrelationStatus('error')
-      setOutcomeReason('An error occurred during auto-correlation.')
     }
   }
+
   function stop() {
     void stopGeneration()
     setCorrelationStatus('aborted')
     abortControllerRef.current?.abort()
+  }
+
+  function restart() {
+    setSuggestedRules([])
+    setMessages([])
+    clearError()
+    return start()
   }
 
   useEffect(() => {
@@ -234,11 +240,11 @@ export const useGenerateRules = ({
     error,
     status,
     suggestedRules,
-    isValid: isValidationSuccessful,
     isLoading,
     correlationStatus,
     outcomeReason,
     tokenUsage,
+    restart,
     stop: useCallback(stop, [stopGeneration]),
   }
 }
