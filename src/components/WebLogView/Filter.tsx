@@ -21,6 +21,17 @@ export function Filter({
 }) {
   const inputRef = useRef<SearchFieldHandle>(null)
 
+  const placeholder = filterAllData
+    ? 'Search all request data'
+    : 'Search URL, method, or status code'
+
+  const tooltip = filterAllData
+    ? 'Search all request data (headers, cookies, payload, response)'
+    : 'Search URL, method, status code, hosts and paths'
+
+  const Icon = filterAllData ? Inspect : CodeXmlIcon
+  const variant = filterAllData ? 'solid' : 'ghost'
+
   useKeyPressEvent('Escape', () => {
     inputRef.current?.clear()
   })
@@ -39,31 +50,21 @@ export function Filter({
       {...inputProps}
       ref={inputRef}
       filter={filter}
-      placeholder={
-        filterAllData
-          ? 'Search all request data'
-          : 'Search URL, method, or status code'
-      }
+      placeholder={placeholder}
       size="2"
       onChange={setFilter}
     >
       <TextField.Slot px="1">
-        <Tooltip
-          content={
-            filterAllData
-              ? 'Search all request data (headers, cookies, payload, response)'
-              : 'Search URL, method, status code, hosts and paths'
-          }
-        >
+        <Tooltip content={tooltip}>
           <IconButton
-            variant={filterAllData ? 'solid' : 'ghost'}
+            variant={variant}
             size="1"
             onClick={() => setFilterAllData(!filterAllData)}
             // Override ghost button margin
             css={{ margin: '0' }}
             aria-label="Toggle search mode"
           >
-            {filterAllData ? <Inspect /> : <CodeXmlIcon />}
+            <Icon />
           </IconButton>
         </Tooltip>
       </TextField.Slot>
