@@ -1,6 +1,13 @@
 import { ipcMain, nativeTheme, shell, BrowserWindow } from 'electron'
 import log from 'electron-log/main'
-import { unlink, readdir, access, rename } from 'fs/promises'
+import {
+  unlink,
+  readdir,
+  access,
+  rename,
+  readFile,
+  writeFile,
+} from 'fs/promises'
 import path from 'path'
 import invariant from 'tiny-invariant'
 
@@ -13,6 +20,7 @@ import {
   DATA_FILES_PATH,
 } from '@/constants/workspace'
 import { getFilePath, getStudioFileFromPath } from '@/main/file'
+import { GeneratorFileDataSchema } from '@/schemas/generator'
 import { StudioFile } from '@/types'
 import { getBrowserPath } from '@/utils/browser'
 import { reportNewIssue } from '@/utils/bugReport'
@@ -20,6 +28,47 @@ import { sendToast } from '@/utils/electron'
 import { isNodeJsErrnoException } from '@/utils/typescript'
 
 import { UIHandler } from './types'
+
+async function updateGeneratorRecordingReferences(
+  oldFileName: string,
+  newFileName: string
+) {
+  const generatorFiles = await readdir(GENERATORS_PATH, { withFileTypes: true })
+
+  await Promise.all(
+    generatorFiles
+      .filter((file) => file.isFile() && file.name.endsWith('.k6g'))
+      .map(async (file) => {
+        try {
+          const filePath = path.join(GENERATORS_PATH, file.name)
+          const contents = await readFile(filePath, {
+            encoding: 'utf-8',
+            flag: 'r',
+          })
+          const json: unknown = JSON.parse(contents)
+          const parsed = GeneratorFileDataSchema.safeParse(json)
+
+          if (!parsed.success) {
+            return
+          }
+
+          const generator = parsed.data
+
+          if (generator.recordingPath !== oldFileName) {
+            return
+          }
+
+          const updated = { ...generator, recordingPath: newFileName }
+          await writeFile(filePath, JSON.stringify(updated, null, 2))
+        } catch (error) {
+          log.error('Failed to update generator recording reference', {
+            file: file.name,
+            error,
+          })
+        }
+      })
+  )
+}
 
 export function initialize() {
   ipcMain.on(UIHandler.ToggleTheme, () => {
@@ -128,6 +177,10 @@ export function initialize() {
           // Only rename if the error code is ENOENT (file does not exist)
           if (isNodeJsErrnoException(error) && error.code === 'ENOENT') {
             await rename(oldPath, newPath)
+
+            if (type === 'recording') {
+              await updateGeneratorRecordingReferences(oldFileName, newFileName)
+            }
             return
           }
 
