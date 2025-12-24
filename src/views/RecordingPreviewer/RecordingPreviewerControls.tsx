@@ -48,12 +48,15 @@ export function RecordingPreviewControls({
     navigate(getRoutePath('recorder'))
   }
 
-  const handleExportBrowserScript = (fileName: string) => {
+  const handleExportBrowserScript = (
+    fileName: string,
+    networkProfile?: 'none' | 'fast3g' | 'slow3g'
+  ) => {
     const test = convertToTest({
       browserEvents,
     })
 
-    emitScript(test)
+    emitScript(test, { networkProfile })
       .then((script) => window.studio.script.saveScript(script, fileName))
       .then(() => {
         navigate(
@@ -119,7 +122,10 @@ export function RecordingPreviewControls({
         open={showExportDialog}
         scriptName="my-browser-script.js"
         onOpenChange={setShowExportDialog}
-        onExport={handleExportBrowserScript}
+        showNetworkProfile
+        onExportFull={(data) =>
+          handleExportBrowserScript(data.scriptName, data.networkProfile)
+        }
       />
     </>
   )

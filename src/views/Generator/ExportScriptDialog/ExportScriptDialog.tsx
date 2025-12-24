@@ -19,15 +19,19 @@ import { ScriptNameForm } from './ScriptNameForm'
 interface ExportScriptDialogProps {
   open: boolean
   scriptName: string
-  onExport: (scriptName: string) => void
+  onExport?: (scriptName: string) => void
+  onExportFull?: (data: ExportScriptDialogData) => void
   onOpenChange: (open: boolean) => void
+  showNetworkProfile?: boolean
 }
 
 export function ExportScriptDialog({
   open,
   scriptName,
   onExport,
+  onExportFull,
   onOpenChange,
+  showNetworkProfile = false,
 }: ExportScriptDialogProps) {
   const scripts = useStudioUIStore((store) => store.scripts)
 
@@ -35,6 +39,7 @@ export function ExportScriptDialog({
     resolver: zodResolver(ExportScriptDialogSchema),
     defaultValues: {
       scriptName,
+      networkProfile: 'none',
     },
   })
 
@@ -51,6 +56,7 @@ export function ExportScriptDialog({
 
     setValue('scriptName', scriptName)
     setValue('overwriteFile', false)
+    setValue('networkProfile', 'none')
   }, [open, scriptName, setValue])
 
   const onSubmit = (data: ExportScriptDialogData) => {
@@ -62,7 +68,11 @@ export function ExportScriptDialog({
       return
     }
 
-    onExport(fileName)
+    if (onExportFull) {
+      onExportFull({ ...data, scriptName: fileName })
+    } else if (onExport) {
+      onExport(fileName)
+    }
     onOpenChange(false)
   }
 
@@ -97,6 +107,32 @@ export function ExportScriptDialog({
 
         <FormProvider {...formMethods}>
           <form onSubmit={formMethods.handleSubmit(onSubmit)}>
+            {showNetworkProfile && (
+              <Flex direction="column" gap="1" mb="3">
+                <label
+                  css={css`
+                    font-size: 14px;
+                    color: var(--gray-12);
+                  `}
+                >
+                  Network profile
+                </label>
+                <select
+                  {...formMethods.register('networkProfile')}
+                  css={css`
+                    padding: 8px 10px;
+                    border: 1px solid var(--gray-6);
+                    border-radius: 6px;
+                    background: var(--color-surface);
+                    color: var(--gray-12);
+                  `}
+                >
+                  <option value="none">None</option>
+                  <option value="fast3g">Fast 3G</option>
+                  <option value="slow3g">Slow 3G</option>
+                </select>
+              </Flex>
+            )}
             {showOverwriteWarning ? (
               <OverwriteFileWarning />
             ) : (

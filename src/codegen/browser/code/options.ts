@@ -67,15 +67,42 @@ function isBrowserScenario(scenario: ir.Scenario) {
   return scenario.body.some(visit)
 }
 
-function emitBrowserOptions(_scenario: ir.Scenario) {
+function getNetworkSettings(profile?: string) {
+  const profiles: Record<
+    string,
+    { downstreamBw: number; upstreamBw: number; latency: number }
+  > = {
+    fast3g: {
+      downstreamBw: 400 * 1024,
+      upstreamBw: 400 * 1024,
+      latency: 400,
+    },
+    slow3g: {
+      downstreamBw: 50 * 1024,
+      upstreamBw: 50 * 1024,
+      latency: 2000,
+    },
+  }
+
+  return profile ? profiles[profile] : undefined
+}
+
+function emitBrowserOptions(_scenario: ir.Scenario, networkProfile?: string) {
   if (!isBrowserScenario(_scenario)) {
     return undefined
   }
 
-  return fromObjectLiteral({
-    browser: fromObjectLiteral({
-      type: 'chromium',
+  const networkSettings = getNetworkSettings(networkProfile)
+
+  const browserOptions = {
+    type: 'chromium' as const,
+    ...(networkSettings && {
+      __networkEmulation: fromObjectLiteral(networkSettings),
     }),
+  }
+
+  return fromObjectLiteral({
+    browser: fromObjectLiteral(browserOptions),
   })
 }
 
@@ -90,22 +117,33 @@ function emitSharedIterationsExecutor(
   })
 }
 
-function emitExecutor(scenario: ir.Scenario, exec?: string) {
-  const options = emitBrowserOptions(scenario)
+function emitExecutor(
+  scenario: ir.Scenario,
+  exec?: string,
+  networkProfile?: string
+) {
+  const options = emitBrowserOptions(scenario, networkProfile)
 
   return emitSharedIterationsExecutor(options, exec)
 }
 
-function emitScenarioOptions({ defaultScenario, scenarios }: ir.Test) {
+function emitScenarioOptions(
+  { defaultScenario, scenarios }: ir.Test,
+  networkProfile?: string
+) {
   const withDefaultScenario = defaultScenario
     ? {
-        [defaultScenario.name ?? 'default']: emitExecutor(defaultScenario),
+        [defaultScenario.name ?? 'default']: emitExecutor(
+          defaultScenario,
+          undefined,
+          networkProfile
+        ),
       }
     : {}
 
   const withNamedScenarios = Object.entries(scenarios).reduce(
     (acc, [name, scenario]) => {
-      acc[name] = emitExecutor(scenario, name)
+      acc[name] = emitExecutor(scenario, name, networkProfile)
 
       return acc
     },
@@ -115,8 +153,8 @@ function emitScenarioOptions({ defaultScenario, scenarios }: ir.Test) {
   return fromObjectLiteral(withNamedScenarios)
 }
 
-export function emitOptions(test: ir.Test) {
+export function emitOptions(test: ir.Test, networkProfile?: string) {
   return fromObjectLiteral({
-    scenarios: emitScenarioOptions(test),
+    scenarios: emitScenarioOptions(test, networkProfile),
   })
 }
