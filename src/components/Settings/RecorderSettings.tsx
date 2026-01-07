@@ -52,7 +52,7 @@ export const RecorderSettings = () => {
 
   return (
     <SettingsSection>
-      <Flex gap="2" mb="4">
+      <Flex gap="2" mb="4" direction="column">
         <Controller
           control={control}
           name="recorder.detectBrowserPath"
@@ -67,6 +67,10 @@ export const RecorderSettings = () => {
             </Text>
           )}
         />
+        <Text size="1" color="gray">
+          Automatically search your system for a compatible Chrome or Chromium
+          installation.
+        </Text>
       </Flex>
 
       <FileUploadInput
@@ -139,6 +143,26 @@ export const RecorderSettings = () => {
           />
         </Flex>
       </FieldGroup>
+
+      <Flex gap="2" mt="2" direction="column">
+        <Controller
+          control={control}
+          name="export.showNetworkOptionsInExport"
+          render={({ field }) => (
+            <Text size="2" as="label">
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />{' '}
+              Show network throttling options when exporting browser scripts
+            </Text>
+          )}
+        />
+        <Text size="1" color="gray">
+          Enable network speed simulation in exported browser scripts to test
+          performance under different conditions.
+        </Text>
+      </Flex>
     </SettingsSection>
   )
 }

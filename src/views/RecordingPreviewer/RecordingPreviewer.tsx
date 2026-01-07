@@ -63,7 +63,13 @@ export function RecordingPreviewer() {
       subTitle={<FileNameHeader file={file} />}
       loading={isLoading}
       actions={
-        <RecordingPreviewControls file={file} browserEvents={browserEvents} />
+        <RecordingPreviewControls
+          file={file}
+          browserEvents={browserEvents}
+          showNetworkOptions={
+            settings?.export.showNetworkOptionsInExport ?? false
+          }
+        />
       }
     >
       {!isLoading && browserRecorderSetting !== 'disabled' && (

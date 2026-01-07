@@ -1,7 +1,13 @@
 import { mapNonEmpty } from '@/utils/list'
 import { exhaustive } from '@/utils/typescript'
 
-import { Expression, Statement, Scenario, Assertion } from './ast'
+import {
+  Expression,
+  Statement,
+  Scenario,
+  Assertion,
+  NetworkProfileExpression,
+} from './ast'
 import { IntermediateContext } from './context'
 
 type Substitutions = Map<string, string>
@@ -52,6 +58,8 @@ function substituteExpression(
     case 'StringLiteral':
     case 'NewPageExpression':
     case 'ClickOptionsExpression':
+    case 'NetworkProfilePresetExpression':
+    case 'NetworkProfileCustomExpression':
       return node
 
     case 'Identifier':
@@ -187,6 +195,16 @@ function substituteExpression(
       return {
         type: 'WaitForNavigationExpression',
         target: substituteExpression(node.target, substitutions),
+      }
+
+    case 'ThrottleNetworkExpression':
+      return {
+        type: 'ThrottleNetworkExpression',
+        page: substituteExpression(node.page, substitutions),
+        profile: substituteExpression(
+          node.profile,
+          substitutions
+        ) as NetworkProfileExpression,
       }
 
     default:

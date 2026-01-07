@@ -10,6 +10,7 @@ import { DeleteFileDialog } from '@/components/DeleteFileDialog'
 import { useCreateGenerator } from '@/hooks/useCreateGenerator'
 import { useDeleteFile } from '@/hooks/useDeleteFile'
 import { getRoutePath } from '@/routeMap'
+import { NetworkThrottleSelection } from '@/schemas/exportScript'
 import { BrowserEvent } from '@/schemas/recording'
 import { useToast } from '@/store/ui/useToast'
 import { StudioFile } from '@/types'
@@ -19,11 +20,13 @@ import { ExportScriptDialog } from '../Generator/ExportScriptDialog'
 interface RecordingPreviewControlsProps {
   file: StudioFile
   browserEvents: BrowserEvent[]
+  showNetworkOptions?: boolean
 }
 
 export function RecordingPreviewControls({
   file,
   browserEvents,
+  showNetworkOptions = false,
 }: RecordingPreviewControlsProps) {
   const [showExportDialog, setShowExportDialog] = useState(false)
   const showToast = useToast()
@@ -55,9 +58,13 @@ export function RecordingPreviewControls({
     navigate(getRoutePath('home'))
   }
 
-  const handleExportBrowserScript = (fileName: string) => {
+  const handleExportBrowserScript = (
+    fileName: string,
+    networkThrottle?: NetworkThrottleSelection
+  ) => {
     const test = convertToTest({
       browserEvents,
+      networkThrottle,
     })
 
     emitScript(test)
@@ -144,6 +151,7 @@ export function RecordingPreviewControls({
         scriptName="my-browser-script.js"
         onOpenChange={setShowExportDialog}
         onExport={handleExportBrowserScript}
+        showNetworkSettings={showNetworkOptions}
       />
     </>
   )

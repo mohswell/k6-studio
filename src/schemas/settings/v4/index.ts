@@ -88,6 +88,10 @@ export const RecorderSettingsSchema = z
     }
   })
 
+export const ExportSettingsSchema = z.object({
+  showNetworkOptionsInExport: z.boolean().default(false),
+})
+
 export const WindowStateSchema = z.object({
   x: z.number().int(),
   y: z.number().int(),
@@ -114,6 +118,7 @@ export const AppSettingsSchema = z.object({
   version: z.literal('4.0'),
   proxy: ProxySettingsSchema,
   recorder: RecorderSettingsSchema,
+  export: ExportSettingsSchema,
   windowState: WindowStateSchema,
   telemetry: TelemetrySchema,
   appearance: AppearanceSchema,

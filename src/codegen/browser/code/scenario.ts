@@ -33,6 +33,44 @@ function emitNewPageExpression(
     .done()
 }
 
+function emitNetworkProfileExpression(
+  context: ScenarioContext,
+  expression: ir.NetworkProfileExpression
+): ts.Expression {
+  switch (expression.type) {
+    case 'NetworkProfilePresetExpression':
+      context.import(['networkProfiles'], 'k6/browser')
+
+      return new ExpressionBuilder(identifier('networkProfiles'))
+        .member(string(expression.preset))
+        .done()
+
+    case 'NetworkProfileCustomExpression':
+      return fromObjectLiteral({
+        latency: literal({ value: expression.latency }),
+        download: literal({ value: expression.download }),
+        upload: literal({ value: expression.upload }),
+      })
+
+    default:
+      return exhaustive(expression)
+  }
+}
+
+function emitThrottleNetworkExpression(
+  context: ScenarioContext,
+  expression: ir.ThrottleNetworkExpression
+): ts.Expression {
+  const page = emitExpression(context, expression.page)
+  const profile = emitNetworkProfileExpression(context, expression.profile)
+
+  return new ExpressionBuilder(page)
+    .member('throttleNetwork')
+    .call([profile])
+    .await(context)
+    .done()
+}
+
 function emitNewRoleLocatorExpression(
   context: ScenarioContext,
   expression: ir.NewRoleLocatorExpression
@@ -428,6 +466,10 @@ function emitExpression(
     case 'NewTestIdLocatorExpression':
       return emitNewTestIdLocatorExpression(context, expression)
 
+    case 'NetworkProfilePresetExpression':
+    case 'NetworkProfileCustomExpression':
+      return emitNetworkProfileExpression(context, expression)
+
     case 'GotoExpression':
       return emitGotoExpression(context, expression)
 
@@ -463,6 +505,9 @@ function emitExpression(
 
     case 'PromiseAllExpression':
       return emitPromiseAllExpression(context, expression)
+
+    case 'ThrottleNetworkExpression':
+      return emitThrottleNetworkExpression(context, expression)
 
     default:
       return exhaustive(expression)

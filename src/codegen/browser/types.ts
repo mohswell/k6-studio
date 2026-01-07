@@ -1,8 +1,13 @@
+import { NetworkPreset } from '@/schemas/exportScript'
 import { CheckState, NavigateToPageEvent } from '@/schemas/recording'
 
 import { NodeSelector } from './selectors'
 
 export type NodeId = string
+
+export type NetworkThrottle =
+  | { type: 'preset'; preset: NetworkPreset }
+  | { type: 'custom'; latency: number; download: number; upload: number }
 
 interface NodeBase {
   nodeId: NodeId
@@ -149,6 +154,7 @@ export type TestNode =
 
 export interface Scenario {
   nodes: TestNode[]
+  networkThrottle?: NetworkThrottle
 }
 
 export type DefaultScenario = Scenario & {

@@ -13,10 +13,12 @@ import {
   Test,
   LocatorNode,
   AssertionOperation,
+  NetworkThrottle,
 } from './types'
 
 interface Recording {
   browserEvents: BrowserEvent[]
+  networkThrottle?: NetworkThrottle
 }
 
 function toNodeRef(node: TestNode): NodeRef {
@@ -270,10 +272,14 @@ function buildBrowserNodeGraph(events: BrowserEvent[]) {
   return nodes
 }
 
-export function convertToTest({ browserEvents }: Recording): Test {
+export function convertToTest({
+  browserEvents,
+  networkThrottle,
+}: Recording): Test {
   return {
     defaultScenario: {
       nodes: buildBrowserNodeGraph(browserEvents),
+      networkThrottle,
     },
     scenarios: {},
   }

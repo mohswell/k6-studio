@@ -3,7 +3,6 @@ import {
   TextField,
   Flex,
   AlertDialog,
-  Button,
   Checkbox,
   Text,
 } from '@radix-ui/themes'
@@ -42,7 +41,7 @@ export function ScriptNameForm({
         </FieldGroup>
       </Box>
 
-      <Flex gap="2" my="4">
+      <Flex gap="2" my="2">
         <Text size="2" as="label">
           <Checkbox
             checked={alwaysOverwriteScript}
@@ -50,18 +49,6 @@ export function ScriptNameForm({
           />{' '}
           Automatically overwrite existing script
         </Text>
-      </Flex>
-
-      <Flex justify="end" gap="2">
-        <AlertDialog.Cancel>
-          <Button variant="outline" color="orange">
-            Cancel
-          </Button>
-        </AlertDialog.Cancel>
-
-        <Button color="orange" type="submit">
-          Export
-        </Button>
       </Flex>
     </>
   )

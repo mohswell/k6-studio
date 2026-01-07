@@ -18,6 +18,32 @@ function emitPageNode(context: IntermediateContext, node: m.PageNode) {
     name: 'page',
     value: expression,
   })
+
+  const throttle = context.scenario.networkThrottle
+
+  if (throttle) {
+    const profile: ir.NetworkProfileExpression =
+      throttle.type === 'preset'
+        ? {
+            type: 'NetworkProfilePresetExpression',
+            preset: throttle.preset,
+          }
+        : {
+            type: 'NetworkProfileCustomExpression',
+            latency: throttle.latency,
+            download: throttle.download,
+            upload: throttle.upload,
+          }
+
+    context.emit({
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'ThrottleNetworkExpression',
+        page: context.reference(node),
+        profile,
+      },
+    })
+  }
 }
 
 function emitGotoNode(context: IntermediateContext, node: m.GotoNode) {

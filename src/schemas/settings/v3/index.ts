@@ -52,5 +52,8 @@ export function migrate(
         ? 'extension'
         : 'disabled',
     },
+    export: {
+      showNetworkOptionsInExport: false,
+    },
   }
 }

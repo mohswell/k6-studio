@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertDialog, Flex } from '@radix-ui/themes'
+import { AlertDialog, Flex, Button } from '@radix-ui/themes'
 import { FileCode2Icon } from 'lucide-react'
 import { useEffect } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -9,18 +9,24 @@ import { useLocalStorage } from 'react-use'
 import {
   ExportScriptDialogData,
   ExportScriptDialogSchema,
+  NetworkThrottleSelection,
 } from '@/schemas/exportScript'
 import { useStudioUIStore } from '@/store/ui'
 
 import { getScriptNameWithExtension } from './ExportScriptDialog.utils'
+import { NetworkSettingsForm } from './NetworkSettingsForm'
 import { OverwriteFileWarning } from './OverwriteFileWarning'
 import { ScriptNameForm } from './ScriptNameForm'
 
 interface ExportScriptDialogProps {
   open: boolean
   scriptName: string
-  onExport: (scriptName: string) => void
+  onExport: (
+    scriptName: string,
+    networkThrottle?: NetworkThrottleSelection
+  ) => void
   onOpenChange: (open: boolean) => void
+  showNetworkSettings?: boolean
 }
 
 export function ExportScriptDialog({
@@ -28,6 +34,7 @@ export function ExportScriptDialog({
   scriptName,
   onExport,
   onOpenChange,
+  showNetworkSettings = false,
 }: ExportScriptDialogProps) {
   const scripts = useStudioUIStore((store) => store.scripts)
 
@@ -35,6 +42,11 @@ export function ExportScriptDialog({
     resolver: zodResolver(ExportScriptDialogSchema),
     defaultValues: {
       scriptName,
+      networkMode: 'preset',
+      networkPreset: 'No Throttling',
+      networkLatency: 0,
+      networkDownload: -1,
+      networkUpload: -1,
     },
   })
 
@@ -51,6 +63,11 @@ export function ExportScriptDialog({
 
     setValue('scriptName', scriptName)
     setValue('overwriteFile', false)
+    setValue('networkMode', 'preset')
+    setValue('networkPreset', 'No Throttling')
+    setValue('networkLatency', 0)
+    setValue('networkDownload', -1)
+    setValue('networkUpload', -1)
   }, [open, scriptName, setValue])
 
   const onSubmit = (data: ExportScriptDialogData) => {
@@ -62,7 +79,21 @@ export function ExportScriptDialog({
       return
     }
 
-    onExport(fileName)
+    if (showNetworkSettings) {
+      const networkThrottle: NetworkThrottleSelection =
+        data.networkMode === 'preset'
+          ? { type: 'preset', preset: data.networkPreset }
+          : {
+              type: 'custom',
+              latency: data.networkLatency,
+              download: data.networkDownload,
+              upload: data.networkUpload,
+            }
+
+      onExport(fileName, networkThrottle)
+    } else {
+      onExport(fileName)
+    }
     onOpenChange(false)
   }
 
@@ -70,6 +101,7 @@ export function ExportScriptDialog({
     onOpenChange(open)
     if (!open) {
       setValue('overwriteFile', false)
+      setValue('networkMode', 'preset')
     }
   }
 
@@ -100,10 +132,27 @@ export function ExportScriptDialog({
             {showOverwriteWarning ? (
               <OverwriteFileWarning />
             ) : (
-              <ScriptNameForm
-                alwaysOverwriteScript={!!alwaysOverwriteScript}
-                setAlwaysOverwriteScript={setAlwaysOverwriteScript}
-              />
+              <>
+                <ScriptNameForm
+                  alwaysOverwriteScript={!!alwaysOverwriteScript}
+                  setAlwaysOverwriteScript={setAlwaysOverwriteScript}
+                />
+                {showNetworkSettings && <NetworkSettingsForm />}
+              </>
+            )}
+
+            {!showOverwriteWarning && (
+              <Flex justify="end" gap="2" mt="2">
+                <AlertDialog.Cancel>
+                  <Button variant="outline" color="orange">
+                    Cancel
+                  </Button>
+                </AlertDialog.Cancel>
+
+                <Button color="orange" type="submit">
+                  Export
+                </Button>
+              </Flex>
             )}
           </form>
         </FormProvider>

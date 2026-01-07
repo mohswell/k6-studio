@@ -1,3 +1,5 @@
+import { NetworkPreset } from '@/schemas/exportScript'
+
 export interface Identifier {
   type: 'Identifier'
   name: string
@@ -8,8 +10,30 @@ export interface StringLiteral {
   value: string
 }
 
+export interface NetworkProfilePresetExpression {
+  type: 'NetworkProfilePresetExpression'
+  preset: NetworkPreset
+}
+
+export interface NetworkProfileCustomExpression {
+  type: 'NetworkProfileCustomExpression'
+  latency: number
+  download: number
+  upload: number
+}
+
+export type NetworkProfileExpression =
+  | NetworkProfilePresetExpression
+  | NetworkProfileCustomExpression
+
 export interface NewPageExpression {
   type: 'NewPageExpression'
+}
+
+export interface ThrottleNetworkExpression {
+  type: 'ThrottleNetworkExpression'
+  page: Expression
+  profile: NetworkProfileExpression
 }
 
 export interface NewCssLocatorExpression {
@@ -193,6 +217,8 @@ export type Expression =
   | WaitForExpression
   | WaitForOptionsExpression
   | WaitForNavigationExpression
+  | NetworkProfileExpression
+  | ThrottleNetworkExpression
   | PromiseAllExpression
 
 export interface VariableDeclaration {

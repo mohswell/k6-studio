@@ -46,11 +46,14 @@ function isBrowserScenario(scenario: ir.Scenario) {
       case 'WaitForExpression':
       case 'WaitForOptionsExpression':
       case 'WaitForNavigationExpression':
+      case 'ThrottleNetworkExpression':
         return true
 
       case 'Identifier':
       case 'StringLiteral':
       case 'PromiseAllExpression':
+      case 'NetworkProfilePresetExpression':
+      case 'NetworkProfileCustomExpression':
         return false
 
       case 'VariableDeclaration':
