@@ -61,13 +61,10 @@ function emitScenario(
   })
 }
 
-export function toTypeScriptAst(
-  test: ir.Test,
-  meta?: { networkProfile?: 'none' | 'fast3g' | 'slow3g' }
-): ts.Program {
+export function toTypeScriptAst(test: ir.Test): ts.Program {
   const context = new CodeGenContext()
 
-  const options = emitOptions(test, meta?.networkProfile)
+  const options = emitOptions(test)
 
   const defaultScenario =
     test.defaultScenario &&
