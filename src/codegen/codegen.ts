@@ -236,6 +236,10 @@ export function generateSingleRequestSnippet(
       if (contentTypeHeader.includes('multipart/form-data')) {
         content = `\`${escapedContent.replace(/(?:\r\n|\r|\n)/g, '\\r\\n')}\``
       }
+
+      if (isJsonContent(escapedContent, contentTypeHeader)) {
+        content = JSON.stringify(escapedContent)
+      }
     }
   } catch (error) {
     console.error('Failed to serialize request content', error)
@@ -298,6 +302,16 @@ export function generateParameterizationCustomCode(
       )
     )
     .join('\n')
+}
+// So Json checks for application/json is not sufficient, some requests like graphql IntrospectionQuery requests do not have that header
+// https://github.com/graphql/graphiql/issues/3460
+function isJsonContent(content: string, contentType: string): boolean {
+  const firstChar = content.trimStart()[0]
+  return (
+    contentType.includes('application/json') ||
+    firstChar === '{' ||
+    firstChar === '['
+  )
 }
 
 function escapeBackticks(content: string): string {
